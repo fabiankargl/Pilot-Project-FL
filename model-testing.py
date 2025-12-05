@@ -227,9 +227,6 @@ def train_and_evaluate():
             )
 
 
-# -----------------------------
-# main
-# -----------------------------
 def main():
     visualize_data()
 
