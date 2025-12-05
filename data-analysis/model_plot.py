@@ -2,7 +2,6 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
 
-# Deine gesammelten Ergebnisse (manuell eingetragen)
 data = {
     'Model': ['Random Forest', 'Decision Tree', 'Logistic Regression', 'Neural Network (sklearn)', 'Neural Network (PyTorch)'],
     'AUC_Score': [0.9033, 0.8841, 0.8943, 0.8966, 0.9009],
@@ -11,11 +10,9 @@ data = {
 
 df_results = pd.DataFrame(data)
 
-# Plotting
 plt.figure(figsize=(10, 6))
 sns.scatterplot(data=df_results, x='AUC_Score', y='Macro_F1_Score', s=200, hue='Model', style='Model')
 
-# Beschriftungen hinzufügen
 for i in range(df_results.shape[0]):
     plt.text(
         df_results.AUC_Score[i] + 0.0002, 
