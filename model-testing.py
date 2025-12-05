@@ -37,7 +37,8 @@ def safe_name(name: str) -> str:
 
 
 def visualize_data(csv_path: str = CSV_PATH, output_dir: str = PLOT_DIR) -> None:
-pd.read_csv(csv_path)
+
+    df = pd.read_csv(csv_path)
 
     if "income" in df.columns:
         plt.figure()
@@ -121,6 +122,7 @@ def load_data(csv_path: str = CSV_PATH):
 
     return X, y
 
+
 def plot_feature_importance(importances, feature_names, title, filename, top_n=20):
     """Speichert einen Bar-Plot der wichtigsten Features."""
     importances = np.array(importances)
@@ -137,6 +139,7 @@ def plot_feature_importance(importances, feature_names, title, filename, top_n=2
     plt.tight_layout()
     plt.savefig(os.path.join(PLOT_DIR, filename))
     plt.close()
+
 
 
 def train_and_evaluate():
