@@ -1,0 +1,18 @@
+{
+    "RandomForest": {
+        "AUC_Score": 0.9033134290964384,
+        "Macro_F1_Score": 0.758357041251778
+    },
+    "DecisionTree": {
+        "AUC_Score": 0.8985869636755129,
+        "Macro_F1_Score": 0.7591695574787967
+    },
+    "LogisticRegression": {
+        "AUC_Score": 0.894417714858643,
+        "Macro_F1_Score": 0.7492789407765253
+    },
+    "PyTorchNN": {
+        "AUC_Score": 0.900842938224297,
+        "Macro_F1_Score": 0.7543666132653362
+    }
+}
