@@ -16,7 +16,7 @@ from sklearn.neural_network import MLPClassifier
 
 BASE = os.path.dirname(os.path.abspath(__file__))
 
-CSV_PATH = os.path.join(BASE, "data", "BankB.csv")
+CSV_PATH = os.path.join(BASE, "..", "data", "BankB.csv")
 
 PLOT_DIR = os.path.join(BASE, "plots")
 os.makedirs(PLOT_DIR, exist_ok=True)
