@@ -10,14 +10,15 @@ build-backend = "hatchling.build"
 [project]
 name = "pilot"
 version = "1.0.0"
-description = ""
+description = "Federated Learning for Banking"
 license = "Apache-2.0"
 # Dependencies for your Flower App
 dependencies = [
     "flwr[simulation]>=1.24.0",
-    "flwr-datasets[vision]>=0.5.0",
     "torch>=2.7.1",
-    "torchvision>=0.22.1",
+    "pandas",
+    "scikit-learn",
+    "numpy",
 ]
 
 [tool.hatch.build.targets.wheel]
@@ -33,10 +34,10 @@ clientapp = "pilot.client_app:app"
 
 # Custom config values accessible via `context.run_config`
 [tool.flwr.app.config]
-num-server-rounds = 3
+num-server-rounds = 5
 fraction-train = 0.5
 local-epochs = 1
-lr = 0.01
+lr = 0.001
 
 # Default federation to use when running the app
 [tool.flwr.federations]
@@ -44,7 +45,7 @@ default = "local-simulation"
 
 # Local simulation federation with 10 virtual SuperNodes
 [tool.flwr.federations.local-simulation]
-options.num-supernodes = 10
+options.num-supernodes = 3
 
 # Remote federation example for use with SuperLink
 [tool.flwr.federations.remote-federation]
