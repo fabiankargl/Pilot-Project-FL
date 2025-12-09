@@ -1,3 +1,4 @@
+from pathlib import Path
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -36,13 +37,14 @@ class BankNet(nn.Module):
 
 
 def load_data(partition_id: int, num_partitions: int) -> Tuple[DataLoader, DataLoader]:
-    data_filepath = f"../../data/"
+    data_dir = Path(__file__).parent.parent.parent / "data"
+    data_filepath = str(data_dir / "BankA.csv")
     if partition_id == 0:
-        data_filepath += "BankA.csv"
+        data_filepath = str(data_dir / "BankA.csv")
     elif partition_id == 1:
-        data_filepath += "BankB.csv"
+        data_filepath = str(data_dir / "BankB.csv")
     elif partition_id == 2:
-        data_filepath += "BankC.csv"
+        data_filepath = str(data_dir / "BankC.csv")
     else:
         raise ValueError("Only 3 partitions (BankA, BankB, BankC) available.")
         
