@@ -35,9 +35,11 @@ clientapp = "pilot.client_app:app"
 # Custom config values accessible via `context.run_config`
 [tool.flwr.app.config]
 num-server-rounds = 5
-fraction-train = 0.5
+fraction-train = 1.0
+fraction-evaluate = 1.0
 local-epochs = 1
 lr = 0.001
+min-available-clients = 3
 
 # Default federation to use when running the app
 [tool.flwr.federations]
