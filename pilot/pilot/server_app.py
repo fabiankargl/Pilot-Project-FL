@@ -17,9 +17,15 @@ def main(grid: Grid, context: Context) -> None:
     num_rounds: int = context.run_config["num-server-rounds"]
     lr: float = context.run_config["lr"]
     min_clients: int = context.run_config["min-available-clients"]
+    local_epochs = context.run_config.get("local-epochs", 1)
     
     strategy_name = context.run_config.get("strategy", "fedavg").lower()
     proximal_mu = context.run_config.get("proximal-mu", 0.1)
+    
+    run_name = f"{strategy_name}_r{num_rounds}_e{local_epochs}"
+    
+    if strategy_name == "fedprox":
+        run_name += f"_mu{proximal_mu}"
     
     trainloader, _ = load_data(partition_id=0,
                                num_partitions=0)
@@ -47,6 +53,8 @@ def main(grid: Grid, context: Context) -> None:
             min_available_nodes=min_clients,
             proximal_mu=proximal_mu
         )
+    else:
+        raise ValueError(f"Unknown strategy: {strategy_name}")
 
     # Start strategy, run FedAvg for `num_rounds`
     result = strategy.start(
@@ -59,13 +67,14 @@ def main(grid: Grid, context: Context) -> None:
     results_dir = "results"
     os.makedirs(results_dir, exist_ok=True)
     
-    with open(os.path.join(results_dir, f"global_history_{strategy_name}.json"), "w") as f:
+    global_hist_path = os.path.join(results_dir, f"global_history_{run_name}.json")
+    local_hist_path = os.path.join(results_dir, f"local_history_{run_name}.json")
+
+    with open(global_hist_path, "w") as f:
         json.dump(strategy.global_history, f, indent=2)
-    print(f"Global history saved with {len(strategy.global_history['round'])} rounds")
     
-    with open(os.path.join(results_dir, f"local_history_{strategy_name}.json"), "w") as f:
+    with open(local_hist_path, "w") as f:
         json.dump(strategy.local_history, f, indent=2)
-    print(f"Local history saved with {len(strategy.local_history['round'])} rounds")
 
     # Save final model to disk
     print("\nSaving final model to disk...")
@@ -73,3 +82,7 @@ def main(grid: Grid, context: Context) -> None:
     model_path = os.path.join(results_dir, f"final_model_{strategy_name}.pt")
     torch.save(state_dict, model_path)
     print(f"Final model saved to {model_path}")
+    
+    config_path = os.path.join(results_dir, f"config_{run_name}.json")
+    with open(config_path, "w") as f:
+        json.dump(context.run_config, f, indent=2)

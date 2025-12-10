@@ -3,21 +3,23 @@ import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
 import os
 import glob
+import itertools
 
 plt.rcParams['font.size'] = 11
 plt.rcParams['axes.labelsize'] = 12
 plt.rcParams['axes.titlesize'] = 14
 plt.rcParams['legend.fontsize'] = 10
-plt.rcParams['figure.dpi'] = 100
+plt.rcParams['figure.dpi'] = 150
 RESULTS_DIR = "results"
 
-def load_strategy_data(strategy_name):
-    """Loads global and local history for a specific strategy."""
-    global_file = os.path.join(RESULTS_DIR, f"global_history_{strategy_name}.json")
-    local_file = os.path.join(RESULTS_DIR, f"local_history_{strategy_name}.json")
+def load_experiment_data(exp_name: str):
+    """Loads global and local history based on the experiment name."""
+    global_file = os.path.join(RESULTS_DIR, f"global_history_{exp_name}.json")
+    local_file = os.path.join(RESULTS_DIR, f"local_history_{exp_name}.json")
     
-    if not os.path.exists(global_file) or not os.path.exists(local_file):
-        print(f"Warning: Files for strategy '{strategy_name}' not found.")
+    if not os.path.exists(global_file):
+        return None, None
+    if not os.path.exists(local_file):
         return None, None
         
     with open(global_file, "r") as f:
@@ -28,10 +30,17 @@ def load_strategy_data(strategy_name):
     return global_hist, local_hist
 
 def extract_client_data(local_history, metric_key):
-    """Helper function to structure client data cleanly."""
+    """Structures client data for plotting."""
     client_data = {}
+    if "client_results" not in local_history:
+        return {}
+
     for round_idx, round_data in enumerate(local_history["client_results"]):
+        if round_idx >= len(local_history["round"]):
+            break
+            
         round_num = local_history["round"][round_idx]
+        
         for client in round_data["eval"]:
             client_id = client.get("client_id", -1)
             if "partition_id" in client:
@@ -46,14 +55,13 @@ def extract_client_data(local_history, metric_key):
             client_data[client_id]["values"].append(metric_value)
     return client_data
 
-def plot_single_strategy(strategy_name, global_history, local_history):
-    """Creates the 4-panel plot for ONE strategy (Global vs Clients)."""
+def plot_single_experiment(exp_name, global_history, local_history):
+    """Creates the detail plot for a single experiment."""
     fig, axes = plt.subplots(2, 2, figsize=(16, 10))
     fig.patch.set_facecolor('white')
     
     rounds = global_history["round"]
-    colors = ['#1f77b4', '#ff7f0e', '#2ca02c'] 
-    client_names = ['Bank A', 'Bank B', 'Bank C']
+    client_colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd'] 
     
     metrics = [
         ('eval_loss', 'Evaluation Loss', axes[0, 0], 'black'),
@@ -62,6 +70,8 @@ def plot_single_strategy(strategy_name, global_history, local_history):
         ('eval_auc', 'AUC-ROC', axes[1, 1], 'darkgreen')
     ]
     
+    formatted_title = exp_name.replace("_", " ").upper()
+
     for metric_key, metric_name, ax, global_color in metrics:
         ax.set_facecolor('white')
         ax.grid(True, alpha=0.4, linestyle='-', linewidth=0.8, color='gray', zorder=0)
@@ -69,12 +79,12 @@ def plot_single_strategy(strategy_name, global_history, local_history):
         client_data = extract_client_data(local_history, metric_key)
         for client_id in sorted(client_data.keys()):
             data = client_data[client_id]
-            c_idx = int(client_id) if int(client_id) < len(colors) else 0
-            label = client_names[c_idx] if int(client_id) < len(client_names) else f"Client {client_id}"
+            c_idx = int(client_id) % len(client_colors)
+            label = f"Bank {chr(65+int(client_id))}" if int(client_id) < 3 else f"Client {client_id}"
             
             ax.plot(data["rounds"], data["values"], 
                     marker='o', linestyle='--', linewidth=1.5, markersize=6,
-                    alpha=0.6, color=colors[c_idx], label=label, zorder=5)
+                    alpha=0.6, color=client_colors[c_idx], label=label, zorder=5)
         
         ax.plot(rounds, global_history[metric_key], 
                 marker='D', linestyle='-', linewidth=3.0, markersize=8,
@@ -83,21 +93,24 @@ def plot_single_strategy(strategy_name, global_history, local_history):
         ax.set_xlabel('Round', fontweight='bold')
         ax.set_ylabel(metric_name, fontweight='bold')
         ax.set_title(f'{metric_name}', fontweight='bold', fontsize=12)
+        
         ax.legend(loc='best', fontsize=9, framealpha=0.9)
         ax.set_xticks(rounds)
     
-    plt.suptitle(f'Federated Learning Analysis: {strategy_name.upper()}', fontsize=16, fontweight='bold', y=0.99)
+    plt.suptitle(f'Experiment Analysis: {formatted_title}', fontsize=16, fontweight='bold', y=0.99)
     plt.tight_layout()
-    plt.savefig(os.path.join(RESULTS_DIR, f'plot_{strategy_name}.png'), dpi=150)
+    plt.savefig(os.path.join(RESULTS_DIR, f'plot_{exp_name}.png'), dpi=150)
     plt.close()
-    print(f"Plot saved: plot_{strategy_name}.png")
+    print(f"  -> Detail plot saved: plot_{exp_name}.png")
 
-def plot_strategy_comparison(strategies_data):
-    """Compares global models and shows the BEST value in the legend."""
-    if len(strategies_data) < 2:
-        print("Not enough strategies for a comparison plot.")
+def plot_comparison(all_experiments):
+    """Compares all found experiments in one plot."""
+    if len(all_experiments) < 2:
+        print("Not enough experiments for a comparison plot.")
         return
 
+    print(f"\nCreating comparison plot for {len(all_experiments)} experiments...")
+    
     fig, axes = plt.subplots(2, 2, figsize=(16, 10))
     fig.patch.set_facecolor('#f5f5f5') 
     
@@ -108,29 +121,34 @@ def plot_strategy_comparison(strategies_data):
         ('eval_auc', 'AUC-ROC', axes[1, 1], 'max')
     ]
     
-    styles = {
-        'fedavg': {'color': '#1f77b4', 'marker': 'o'},
-        'fedprox': {'color': '#d62728', 'marker': 'D'} 
-    }
-    
+    color_cycle = itertools.cycle(plt.cm.tab10.colors)
+    marker_cycle = itertools.cycle(['o', 's', 'D', '^', 'v', 'X'])
+
+    exp_styles = {}
+    for name in all_experiments.keys():
+        exp_styles[name] = {
+            'color': next(color_cycle),
+            'marker': next(marker_cycle)
+        }
+
     for metric_key, title, ax, mode in metrics_config:
-        # Plot Style
         ax.set_facecolor('white')
         ax.grid(True, which='major', linestyle='--', linewidth=0.7, color='gray', alpha=0.5, zorder=0)
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
         
-        for name, (glob_hist, _) in strategies_data.items():
+        for exp_name, (glob_hist, _) in all_experiments.items():
             rounds = glob_hist["round"]
             values = glob_hist[metric_key]
             
-            style = styles.get(name, {'color': 'gray', 'marker': 'x'})
+            style = exp_styles[exp_name]
             
             if mode == 'min':
                 best_val = min(values)
             else:
                 best_val = max(values)
             
-            label_text = f"{name.upper()} (Best: {best_val:.4f})"
+            clean_name = exp_name.replace("global_history_", "").replace("_", " ").upper()
+            label_text = f"{clean_name}\n(Best: {best_val:.4f})"
             
             ax.plot(rounds, values, 
                     marker=style['marker'], 
@@ -144,35 +162,41 @@ def plot_strategy_comparison(strategies_data):
         ax.set_title(title, fontweight='bold', fontsize=12)
         ax.set_xlabel("Round", fontweight='bold')
 
-        ax.legend(loc='best', frameon=True, shadow=True, fancybox=True, fontsize=10, title="Strategy Performance")
+        ax.legend(loc='best', frameon=True, shadow=True, fancybox=True, fontsize=9)
         
-    plt.suptitle('Battle of Algorithms: Standard FedAvg vs. FedProx', fontsize=18, fontweight='bold', y=0.99)
+    plt.suptitle('Benchmark: Comparison of All Experiments', fontsize=18, fontweight='bold', y=0.99)
     plt.tight_layout()
     
-    save_path = os.path.join("results", 'plot_comparison.png')
+    save_path = os.path.join(RESULTS_DIR, 'final_benchmark_comparison.png')
     plt.savefig(save_path, dpi=300, bbox_inches='tight')
     plt.close()
-    print(f"Final comparison plot saved: {save_path}")
+    print(f"✓ Final benchmark plot saved: {save_path}")
 
 def main():
-    files = glob.glob(os.path.join(RESULTS_DIR, "global_history_*.json"))
-    strategy_names = [os.path.basename(f).replace("global_history_", "").replace(".json", "") for f in files]
+    search_pattern = os.path.join(RESULTS_DIR, "global_history_*.json")
+    files = glob.glob(search_pattern)
     
-    if not strategy_names:
-        print("No result files found!")
+    if not files:
+        print(f"No files found in {RESULTS_DIR}!")
         return
 
-    print(f"Found strategies: {strategy_names}")
+    exp_names = []
+    for f in files:
+        filename = os.path.basename(f)
+        name = filename.replace("global_history_", "").replace(".json", "")
+        exp_names.append(name)
+
+    print(f"Found experiments: {exp_names}")
     
     all_data = {}
 
-    for name in strategy_names:
-        g_hist, l_hist = load_strategy_data(name)
+    for name in exp_names:
+        g_hist, l_hist = load_experiment_data(name)
         if g_hist and l_hist:
             all_data[name] = (g_hist, l_hist)
-            plot_single_strategy(name, g_hist, l_hist)
+            plot_single_experiment(name, g_hist, l_hist)
     
-    plot_strategy_comparison(all_data)
+    plot_comparison(all_data)
 
 if __name__ == "__main__":
     main()
