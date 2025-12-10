@@ -5,7 +5,7 @@ from flwr.app import ArrayRecord, ConfigRecord, Context
 from flwr.serverapp import Grid, ServerApp
 
 from pilot.task import BankNet, load_data
-from pilot.strategy import FedAvgWithHistory
+from pilot.strategy import FedAvgWithHistory, FedProxWithHistory
 
 app = ServerApp()
 
@@ -18,6 +18,9 @@ def main(grid: Grid, context: Context) -> None:
     lr: float = context.run_config["lr"]
     min_clients: int = context.run_config["min-available-clients"]
     
+    strategy_name = context.run_config.get("strategy", "fedavg").lower()
+    proximal_mu = context.run_config.get("proximal-mu", 0.1)
+    
     trainloader, _ = load_data(partition_id=0,
                                num_partitions=0)
     sample_batch = next(iter(trainloader))
@@ -27,14 +30,23 @@ def main(grid: Grid, context: Context) -> None:
     global_model = BankNet(input_dim=input_dim)
     arrays = ArrayRecord(global_model.state_dict())
 
-    # Initialize Custom FedAvg strategy with history tracking
-    strategy = FedAvgWithHistory(
-        fraction_train=fraction_train,
-        fraction_evaluate=fraction_evaluate,
-        min_train_nodes=min_clients,
-        min_evaluate_nodes=min_clients,
-        min_available_nodes=min_clients,
-    )
+    if strategy_name == "fedavg":
+        strategy = FedAvgWithHistory(
+            fraction_train=fraction_train,
+            fraction_evaluate=fraction_evaluate,
+            min_train_nodes=min_clients,
+            min_evaluate_nodes=min_clients,
+            min_available_nodes=min_clients,
+        )
+    elif strategy_name == "fedprox":
+        strategy = FedProxWithHistory(
+            fraction_train=fraction_train,
+            fraction_evaluate=fraction_evaluate,
+            min_train_nodes=min_clients,
+            min_evaluate_nodes=min_clients,
+            min_available_nodes=min_clients,
+            proximal_mu=proximal_mu
+        )
 
     # Start strategy, run FedAvg for `num_rounds`
     result = strategy.start(
@@ -47,17 +59,17 @@ def main(grid: Grid, context: Context) -> None:
     results_dir = "results"
     os.makedirs(results_dir, exist_ok=True)
     
-    with open(os.path.join(results_dir, "global_history.json"), "w") as f:
+    with open(os.path.join(results_dir, f"global_history_{strategy_name}.json"), "w") as f:
         json.dump(strategy.global_history, f, indent=2)
     print(f"Global history saved with {len(strategy.global_history['round'])} rounds")
     
-    with open(os.path.join(results_dir, "local_history.json"), "w") as f:
+    with open(os.path.join(results_dir, f"local_history_{strategy_name}.json"), "w") as f:
         json.dump(strategy.local_history, f, indent=2)
     print(f"Local history saved with {len(strategy.local_history['round'])} rounds")
 
     # Save final model to disk
     print("\nSaving final model to disk...")
     state_dict = result.arrays.to_torch_state_dict()
-    model_path = os.path.join(results_dir, "final_model.pt")
+    model_path = os.path.join(results_dir, f"final_model_{strategy_name}.pt")
     torch.save(state_dict, model_path)
     print(f"Final model saved to {model_path}")

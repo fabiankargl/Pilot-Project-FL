@@ -1,0 +1,230 @@
+{
+  "round": [1, 2, 3, 4, 5],
+  "client_results": [
+    {
+      "train": [
+        {
+          "client_id": 0,
+          "train_loss": 0.32386472591987026,
+          "num_examples": 101468
+        },
+        {
+          "client_id": 1,
+          "train_loss": 0.4230198439517971,
+          "num_examples": 127216
+        },
+        {
+          "client_id": 2,
+          "train_loss": 0.36296026822515454,
+          "num_examples": 203652
+        }
+      ],
+      "eval": [
+        {
+          "client_id": 0,
+          "eval_loss": 0.3425297672187051,
+          "eval_acc": 0.85418637653737,
+          "eval_f1": 0.7716560112850651,
+          "eval_auc": 0.8939880612238551,
+          "num_examples": 25368
+        },
+        {
+          "client_id": 1,
+          "eval_loss": 0.42538555095373265,
+          "eval_acc": 0.7968872818739192,
+          "eval_f1": 0.7620403029802304,
+          "eval_auc": 0.8833529971050539,
+          "num_examples": 31805
+        },
+        {
+          "client_id": 2,
+          "eval_loss": 0.354535532113745,
+          "eval_acc": 0.8383516979946183,
+          "eval_f1": 0.7700552336326554,
+          "eval_auc": 0.8887392978400843,
+          "num_examples": 50913
+        }
+      ]
+    },
+    {
+      "train": [
+        {
+          "client_id": 0,
+          "train_loss": 0.30239846579927815,
+          "num_examples": 101468
+        },
+        {
+          "client_id": 1,
+          "train_loss": 0.402325460765983,
+          "num_examples": 127216
+        },
+        {
+          "client_id": 2,
+          "train_loss": 0.34754787474411897,
+          "num_examples": 203652
+        }
+      ],
+      "eval": [
+        {
+          "client_id": 0,
+          "eval_loss": 0.3292239586487225,
+          "eval_acc": 0.8595474613686535,
+          "eval_f1": 0.7740807489588099,
+          "eval_auc": 0.8980725601926993,
+          "num_examples": 25368
+        },
+        {
+          "client_id": 1,
+          "eval_loss": 0.4103322617364841,
+          "eval_acc": 0.7982392705549441,
+          "eval_f1": 0.7616592856932026,
+          "eval_auc": 0.8899356893943184,
+          "num_examples": 31805
+        },
+        {
+          "client_id": 2,
+          "eval_loss": 0.3416072481391418,
+          "eval_acc": 0.8417889340639915,
+          "eval_f1": 0.7690412615473473,
+          "eval_auc": 0.8925562485481006,
+          "num_examples": 50913
+        }
+      ]
+    },
+    {
+      "train": [
+        {
+          "client_id": 0,
+          "train_loss": 0.29673152530629276,
+          "num_examples": 101468
+        },
+        {
+          "client_id": 1,
+          "train_loss": 0.3954255919851048,
+          "num_examples": 127216
+        },
+        {
+          "client_id": 2,
+          "train_loss": 0.34392682498744026,
+          "num_examples": 203652
+        }
+      ],
+      "eval": [
+        {
+          "client_id": 0,
+          "eval_loss": 0.31976424086304095,
+          "eval_acc": 0.8599810785241249,
+          "eval_f1": 0.7740547127641866,
+          "eval_auc": 0.8983955941817703,
+          "num_examples": 25368
+        },
+        {
+          "client_id": 1,
+          "eval_loss": 0.41561914878471995,
+          "eval_acc": 0.7971702562490175,
+          "eval_f1": 0.7602987400719192,
+          "eval_auc": 0.889350137294338,
+          "num_examples": 31805
+        },
+        {
+          "client_id": 2,
+          "eval_loss": 0.3341422917218364,
+          "eval_acc": 0.8436745035649048,
+          "eval_f1": 0.771203930347086,
+          "eval_auc": 0.8942627580127743,
+          "num_examples": 50913
+        }
+      ]
+    },
+    {
+      "train": [
+        {
+          "client_id": 0,
+          "train_loss": 0.29386523901514267,
+          "num_examples": 101468
+        },
+        {
+          "client_id": 1,
+          "train_loss": 0.3927520249166359,
+          "num_examples": 127216
+        },
+        {
+          "client_id": 2,
+          "train_loss": 0.3406711586458744,
+          "num_examples": 203652
+        }
+      ],
+      "eval": [
+        {
+          "client_id": 0,
+          "eval_loss": 0.31569345520635694,
+          "eval_acc": 0.8590744244717755,
+          "eval_f1": 0.7772858594929137,
+          "eval_auc": 0.8996513823039253,
+          "num_examples": 25368
+        },
+        {
+          "client_id": 1,
+          "eval_loss": 0.4178898587852896,
+          "eval_acc": 0.7980820625687784,
+          "eval_f1": 0.7634534024313687,
+          "eval_auc": 0.8901871972896745,
+          "num_examples": 31805
+        },
+        {
+          "client_id": 2,
+          "eval_loss": 0.3317411513484303,
+          "eval_acc": 0.8436941449138727,
+          "eval_f1": 0.7747520082905404,
+          "eval_auc": 0.8949094840387741,
+          "num_examples": 50913
+        }
+      ]
+    },
+    {
+      "train": [
+        {
+          "client_id": 0,
+          "train_loss": 0.29232643579437034,
+          "num_examples": 101468
+        },
+        {
+          "client_id": 1,
+          "train_loss": 0.39177988253728724,
+          "num_examples": 127216
+        },
+        {
+          "client_id": 2,
+          "train_loss": 0.3387529474925665,
+          "num_examples": 203652
+        }
+      ],
+      "eval": [
+        {
+          "client_id": 0,
+          "eval_loss": 0.30984386666595787,
+          "eval_acc": 0.8620309050772627,
+          "eval_f1": 0.7785069520547928,
+          "eval_auc": 0.9002164714341929,
+          "num_examples": 25368
+        },
+        {
+          "client_id": 1,
+          "eval_loss": 0.43118561228636043,
+          "eval_acc": 0.7936173557616727,
+          "eval_f1": 0.7559362109195771,
+          "eval_auc": 0.8869588010515075,
+          "num_examples": 31805
+        },
+        {
+          "client_id": 2,
+          "eval_loss": 0.3294109852806707,
+          "eval_acc": 0.8453636595761397,
+          "eval_f1": 0.7742160916374261,
+          "eval_auc": 0.8955936022599779,
+          "num_examples": 50913
+        }
+      ]
+    }
+  ]
+}

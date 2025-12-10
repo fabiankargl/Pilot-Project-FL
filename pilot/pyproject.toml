@@ -40,6 +40,8 @@ fraction-evaluate = 1.0
 local-epochs = 1
 lr = 0.001
 min-available-clients = 3
+strategy = "fedprox"  # options: "fedavg" oder "fedprox"
+proximal-mu = 0.1
 
 # Default federation to use when running the app
 [tool.flwr.federations]

@@ -72,10 +72,13 @@ def train(model: nn.Module,
           trainloader: DataLoader, 
           epochs: int, 
           lr: float, 
-          device: torch.device):
+          device: torch.device,
+          proximal_mu: float = 0.0):
     model.to(device)  
     criterion = nn.BCELoss().to(device)
     optimizer = optim.Adam(model.parameters(), lr=lr)
+    
+    global_params = [param.detach().clone() for param in model.parameters()]
     
     model.train()
     running_loss = 0.0
@@ -87,6 +90,13 @@ def train(model: nn.Module,
             optimizer.zero_grad()
             preds = model(inputs)
             loss = criterion(preds, labels)
+            
+            if proximal_mu > 0.0:
+                proximal_term = 0.0
+                for local_weights, global_weights in zip(model.parameters(), global_params):
+                    proximal_term += (local_weights - global_weights).norm(2)**2
+                loss += (proximal_mu / 2) * proximal_term
+            
             loss.backward()
             optimizer.step()
             running_loss += loss.item()

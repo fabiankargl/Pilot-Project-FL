@@ -22,6 +22,8 @@ def train(msg: Message, context: Context):
     
     lr = msg.content["config"].get("lr", 0.01)
     epochs = context.run_config.get("local-epochs", 1)
+    
+    proximal_mu = msg.content["config"].get("proximal_mu", 0.0)
 
     # Call the training function
     train_loss = train_fn(
@@ -30,6 +32,7 @@ def train(msg: Message, context: Context):
         epochs,
         lr,
         device,
+        proximal_mu
     )
 
     # Construct and return reply Message
