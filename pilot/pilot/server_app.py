@@ -4,7 +4,7 @@ import os
 from flwr.app import ArrayRecord, ConfigRecord, Context
 from flwr.serverapp import Grid, ServerApp
 
-from pilot.task import BankNet, load_data
+from pilot.task import BankNet, LogisticRegression, load_data
 from pilot.strategy import FedAvgWithHistory, FedProxWithHistory
 
 app = ServerApp()
@@ -18,11 +18,11 @@ def main(grid: Grid, context: Context) -> None:
     lr: float = context.run_config["lr"]
     min_clients: int = context.run_config["min-available-clients"]
     local_epochs = context.run_config.get("local-epochs", 1)
-    
+    model_type = context.run_config.get("model-type", "nn")
     strategy_name = context.run_config.get("strategy", "fedavg").lower()
     proximal_mu = context.run_config.get("proximal-mu", 0.1)
     
-    run_name = f"{strategy_name}_r{num_rounds}_e{local_epochs}"
+    run_name = f"{strategy_name}_r{num_rounds}_e{local_epochs}_{model_type}_lr{lr}"
     
     if strategy_name == "fedprox":
         run_name += f"_mu{proximal_mu}"
@@ -32,8 +32,11 @@ def main(grid: Grid, context: Context) -> None:
     sample_batch = next(iter(trainloader))
     input_dim = sample_batch[0].shape[1]
 
-    # Load global model
-    global_model = BankNet(input_dim=input_dim)
+    if model_type == "logreg":
+        global_model = LogisticRegression(input_dim=input_dim)
+    else:
+        global_model = BankNet(input_dim=input_dim)
+        
     arrays = ArrayRecord(global_model.state_dict())
 
     if strategy_name == "fedavg":
@@ -79,7 +82,7 @@ def main(grid: Grid, context: Context) -> None:
     # Save final model to disk
     print("\nSaving final model to disk...")
     state_dict = result.arrays.to_torch_state_dict()
-    model_path = os.path.join(results_dir, f"final_model_{strategy_name}.pt")
+    model_path = os.path.join(results_dir, f"final_model_{run_name}.pt")
     torch.save(state_dict, model_path)
     print(f"Final model saved to {model_path}")
     

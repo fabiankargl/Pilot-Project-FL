@@ -4,6 +4,7 @@ from matplotlib.ticker import MaxNLocator
 import os
 import glob
 import itertools
+import re
 
 plt.rcParams['font.size'] = 11
 plt.rcParams['axes.labelsize'] = 12
@@ -17,9 +18,7 @@ def load_experiment_data(exp_name: str):
     global_file = os.path.join(RESULTS_DIR, f"global_history_{exp_name}.json")
     local_file = os.path.join(RESULTS_DIR, f"local_history_{exp_name}.json")
     
-    if not os.path.exists(global_file):
-        return None, None
-    if not os.path.exists(local_file):
+    if not os.path.exists(global_file) or not os.path.exists(local_file):
         return None, None
         
     with open(global_file, "r") as f:
@@ -55,6 +54,54 @@ def extract_client_data(local_history, metric_key):
             client_data[client_id]["values"].append(metric_value)
     return client_data
 
+def format_legend_label(exp_name):
+    """
+    Parses the filename and creates a clean legend label.
+    Format: Model Strategy (Settings)
+    """
+    model = "NN"
+    if "logreg" in exp_name.lower():
+        model = "LogReg"
+    
+    strategy = "FedAvg"
+    if "fedprox" in exp_name.lower():
+        strategy = "FedProx"
+        
+    settings = []
+    
+    r_match = re.search(r'_r(\d+)', exp_name)
+    if r_match:
+        settings.append(f"R{r_match.group(1)}") 
+        
+    e_match = re.search(r'_e(\d+)', exp_name)
+    if e_match:
+        settings.append(f"E{e_match.group(1)}") 
+        
+    lr_match = re.search(r'_lr([0-9.]+)', exp_name)
+    if lr_match:
+        settings.append(f"LR={lr_match.group(1)}")
+
+    mu_match = re.search(r'_mu([0-9.]+)', exp_name)
+    if mu_match:
+        if float(mu_match.group(1)) > 0:
+            settings.append(f"Mu={mu_match.group(1)}")
+            
+    settings_str = ", ".join(settings)
+    return f"{model} {strategy} ({settings_str})"
+
+def get_plot_style(exp_name, color_cycle, marker_cycle):
+    """Determines color and linestyle based on experiment type."""
+    style = {
+        'color': next(color_cycle),
+        'marker': next(marker_cycle),
+        'linestyle': '-'
+    }
+    
+    if "logreg" in exp_name.lower():
+        style['linestyle'] = '--'
+        
+    return style
+
 def plot_single_experiment(exp_name, global_history, local_history):
     """Creates the detail plot for a single experiment."""
     fig, axes = plt.subplots(2, 2, figsize=(16, 10))
@@ -70,7 +117,7 @@ def plot_single_experiment(exp_name, global_history, local_history):
         ('eval_auc', 'AUC-ROC', axes[1, 1], 'darkgreen')
     ]
     
-    formatted_title = exp_name.replace("_", " ").upper()
+    formatted_title = format_legend_label(exp_name)
 
     for metric_key, metric_name, ax, global_color in metrics:
         ax.set_facecolor('white')
@@ -97,14 +144,14 @@ def plot_single_experiment(exp_name, global_history, local_history):
         ax.legend(loc='best', fontsize=9, framealpha=0.9)
         ax.set_xticks(rounds)
     
-    plt.suptitle(f'Experiment Analysis: {formatted_title}', fontsize=16, fontweight='bold', y=0.99)
+    plt.suptitle(f'Experiment Detail: {formatted_title}', fontsize=16, fontweight='bold', y=0.99)
     plt.tight_layout()
     plt.savefig(os.path.join(RESULTS_DIR, f'plot_{exp_name}.png'), dpi=150)
     plt.close()
     print(f"  -> Detail plot saved: plot_{exp_name}.png")
 
 def plot_comparison(all_experiments):
-    """Compares all found experiments in one plot."""
+    """Compares all found experiments with an external legend."""
     if len(all_experiments) < 2:
         print("Not enough experiments for a comparison plot.")
         return
@@ -115,62 +162,73 @@ def plot_comparison(all_experiments):
     fig.patch.set_facecolor('#f5f5f5') 
     
     metrics_config = [
-        ('eval_loss', 'Evaluation Loss', axes[0, 0], 'min'), 
-        ('eval_acc', 'Accuracy', axes[0, 1], 'max'),        
-        ('eval_f1', 'F1 Score (Macro)', axes[1, 0], 'max'),
-        ('eval_auc', 'AUC-ROC', axes[1, 1], 'max')
+        ('eval_loss', 'Evaluation Loss', axes[0, 0]), 
+        ('eval_acc', 'Accuracy', axes[0, 1]),        
+        ('eval_f1', 'F1 Score (Macro)', axes[1, 0]),
+        ('eval_auc', 'AUC-ROC', axes[1, 1])
     ]
     
     color_cycle = itertools.cycle(plt.cm.tab10.colors)
     marker_cycle = itertools.cycle(['o', 's', 'D', '^', 'v', 'X'])
 
     exp_styles = {}
-    for name in all_experiments.keys():
-        exp_styles[name] = {
-            'color': next(color_cycle),
-            'marker': next(marker_cycle)
-        }
+    for name in sorted(all_experiments.keys()):
+        exp_styles[name] = get_plot_style(name, color_cycle, marker_cycle)
 
-    for metric_key, title, ax, mode in metrics_config:
+    legend_handles = []
+    legend_labels = []
+    
+    for i, (metric_key, title, ax) in enumerate(metrics_config):
         ax.set_facecolor('white')
         ax.grid(True, which='major', linestyle='--', linewidth=0.7, color='gray', alpha=0.5, zorder=0)
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
         
-        for exp_name, (glob_hist, _) in all_experiments.items():
+        for exp_name in sorted(all_experiments.keys()):
+            glob_hist, _ = all_experiments[exp_name]
             rounds = glob_hist["round"]
             values = glob_hist[metric_key]
             
             style = exp_styles[exp_name]
+            label_text = format_legend_label(exp_name)
             
-            if mode == 'min':
-                best_val = min(values)
-            else:
-                best_val = max(values)
-            
-            clean_name = exp_name.replace("global_history_", "").replace("_", " ").upper()
-            label_text = f"{clean_name}\n(Best: {best_val:.4f})"
-            
-            ax.plot(rounds, values, 
+            line, = ax.plot(rounds, values, 
                     marker=style['marker'], 
-                    linewidth=2.5, 
+                    linewidth=2.5,
+                    linestyle=style['linestyle'],
                     markersize=8,
-                    label=label_text,
                     color=style['color'],
                     alpha=0.8,
                     zorder=10)
+            
+            if i == 0:
+                if label_text not in legend_labels:
+                    legend_labels.append(label_text)
+                    legend_handles.append(line)
 
         ax.set_title(title, fontweight='bold', fontsize=12)
         ax.set_xlabel("Round", fontweight='bold')
 
-        ax.legend(loc='best', frameon=True, shadow=True, fancybox=True, fontsize=9)
-        
-    plt.suptitle('Benchmark: Comparison of All Experiments', fontsize=18, fontweight='bold', y=0.99)
-    plt.tight_layout()
+    plt.suptitle('Benchmark: Model Type & Strategy Comparison', fontsize=18, fontweight='bold', y=0.96)
+    
+    plt.subplots_adjust(bottom=0.18, hspace=0.3, wspace=0.2)
+    
+    fig.legend(
+        handles=legend_handles, 
+        labels=legend_labels, 
+        loc='lower center', 
+        ncol=3,
+        bbox_to_anchor=(0.5, 0.02), 
+        frameon=True, 
+        shadow=True, 
+        fancybox=True, 
+        fontsize=10, 
+        title="Experiment Settings"
+    )
     
     save_path = os.path.join(RESULTS_DIR, 'final_benchmark_comparison.png')
     plt.savefig(save_path, dpi=300, bbox_inches='tight')
     plt.close()
-    print(f"✓ Final benchmark plot saved: {save_path}")
+    print(f"Final benchmark plot saved: {save_path}")
 
 def main():
     search_pattern = os.path.join(RESULTS_DIR, "global_history_*.json")

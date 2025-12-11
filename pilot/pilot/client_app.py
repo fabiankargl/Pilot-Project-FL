@@ -2,19 +2,24 @@ import torch
 from flwr.app import ArrayRecord, Context, Message, MetricRecord, RecordDict
 from flwr.clientapp import ClientApp
 
-from pilot.task import BankNet, load_data, train as train_fn, test as test_fn
+from pilot.task import BankNet, LogisticRegression, load_data, train as train_fn, test as test_fn
 
 app = ClientApp()
 
 @app.train()
 def train(msg: Message, context: Context):
     partition_id = context.node_config["partition-id"]
+    model_type = context.run_config.get("model-type", "nn")
     trainloader, _ = load_data(partition_id=partition_id,
                                num_partitions=0)
     sample_batch = next(iter(trainloader))
     input_dim = sample_batch[0].shape[1]
-
-    model = BankNet(input_dim=input_dim)
+    
+    if model_type == "logreg":
+        model = LogisticRegression(input_dim=input_dim)
+    else:
+        model = BankNet(input_dim=input_dim)
+        
     model.load_state_dict(msg.content["arrays"].to_torch_state_dict())
     
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -49,12 +54,17 @@ def train(msg: Message, context: Context):
 @app.evaluate()
 def evaluate(msg: Message, context: Context):
     partition_id = context.node_config["partition-id"]
+    model_type = context.run_config.get("model-type", "nn")
     _, valloader = load_data(partition_id=partition_id, 
                              num_partitions=0)
     sample_batch = next(iter(valloader))
     input_dim = sample_batch[0].shape[1]
 
-    model = BankNet(input_dim=input_dim)
+    if model_type == "logreg":
+        model = LogisticRegression(input_dim=input_dim)
+    else:
+        model = BankNet(input_dim=input_dim)
+        
     model.load_state_dict(msg.content["arrays"].to_torch_state_dict())
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     model.to(device)
