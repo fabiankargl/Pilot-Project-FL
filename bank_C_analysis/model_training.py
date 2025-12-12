@@ -203,12 +203,12 @@ def run_logistic_regression(X_train_scaled: np.ndarray,
     print("Best Parameter:", grid_log.best_params_)
 
 
-class BankNet(nn.Module):
+class IncomeNet(nn.Module):
     """
     A simple feed-forward neural network for binary classification.
     """
     def __init__(self, input_dim: int):
-        super(BankNet, self).__init__()
+        super(IncomeNet, self).__init__()
         self.network = nn.Sequential(
             nn.Linear(input_dim, 256),
             nn.BatchNorm1d(256),
@@ -253,7 +253,7 @@ def run_pytorch_nn(X_train_scaled: np.ndarray,
     train_loader = DataLoader(train_dataset, batch_size=64, shuffle=True)
 
     input_dim = X_train_tensor.shape[1]
-    model = BankNet(input_dim)
+    model = IncomeNet(input_dim)
     criterion = nn.BCELoss()
     optimizer = optim.Adam(model.parameters(), lr=0.001)
 

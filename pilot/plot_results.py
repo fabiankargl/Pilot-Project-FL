@@ -59,7 +59,7 @@ def format_legend_label(exp_name):
     Parses the filename and creates a clean legend label.
     Format: Model Strategy (Settings)
     """
-    model = "NN"
+    model = "IncomeNet-66k"
     if "logreg" in exp_name.lower():
         model = "LogReg"
     

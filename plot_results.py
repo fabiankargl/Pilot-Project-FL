@@ -68,7 +68,7 @@ def format_legend_label(exp_name):
         strategy = "FedProx"
         
   
-    return f"{model} - {strategy}"
+    return f"{model} {strategy}"
 
 def get_plot_style(exp_name, color_cycle, marker_cycle):
     """Determines color and linestyle based on experiment type."""

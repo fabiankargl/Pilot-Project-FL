@@ -4,7 +4,7 @@ import os
 from flwr.app import ArrayRecord, ConfigRecord, Context
 from flwr.serverapp import Grid, ServerApp
 
-from pilot.task import BankNet, LogisticRegression, load_data
+from pilot.task import IncomeNet, LogisticRegression, load_data
 from pilot.strategy import FedAvgWithHistory, FedProxWithHistory
 
 app = ServerApp()
@@ -35,7 +35,7 @@ def main(grid: Grid, context: Context) -> None:
     if model_type == "logreg":
         global_model = LogisticRegression(input_dim=input_dim)
     else:
-        global_model = BankNet(input_dim=input_dim)
+        global_model = IncomeNet(input_dim=input_dim)
         
     arrays = ArrayRecord(global_model.state_dict())
 

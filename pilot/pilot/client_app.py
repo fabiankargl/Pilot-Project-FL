@@ -2,7 +2,7 @@ import torch
 from flwr.app import ArrayRecord, Context, Message, MetricRecord, RecordDict
 from flwr.clientapp import ClientApp
 
-from pilot.task import BankNet, LogisticRegression, load_data, train as train_fn, test as test_fn
+from pilot.task import IncomeNet, LogisticRegression, load_data, train as train_fn, test as test_fn
 
 app = ClientApp()
 
@@ -18,7 +18,7 @@ def train(msg: Message, context: Context):
     if model_type == "logreg":
         model = LogisticRegression(input_dim=input_dim)
     else:
-        model = BankNet(input_dim=input_dim)
+        model = IncomeNet(input_dim=input_dim)
         
     model.load_state_dict(msg.content["arrays"].to_torch_state_dict())
     
@@ -63,7 +63,7 @@ def evaluate(msg: Message, context: Context):
     if model_type == "logreg":
         model = LogisticRegression(input_dim=input_dim)
     else:
-        model = BankNet(input_dim=input_dim)
+        model = IncomeNet(input_dim=input_dim)
         
     model.load_state_dict(msg.content["arrays"].to_torch_state_dict())
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")

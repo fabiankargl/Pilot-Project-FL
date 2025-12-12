@@ -7,9 +7,9 @@ from sklearn.metrics import f1_score, roc_auc_score, accuracy_score
 from pilot.utils import load_preprocessing
 from typing import Tuple, Dict
 
-class BankNet(nn.Module):
+class IncomeNet(nn.Module):
     def __init__(self, input_dim: int):
-        super(BankNet, self).__init__()
+        super(IncomeNet, self).__init__()
         self.network = nn.Sequential(
             nn.Linear(in_features=input_dim,
                       out_features=256),
