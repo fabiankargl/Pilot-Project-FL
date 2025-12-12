@@ -1,0 +1,236 @@
+{
+  "round": [
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "client_results": [
+    {
+      "train": [
+        {
+          "client_id": 0,
+          "train_loss": 0.30873044293034024,
+          "num_examples": 101468
+        },
+        {
+          "client_id": 1,
+          "train_loss": 0.4049209550292919,
+          "num_examples": 127216
+        },
+        {
+          "client_id": 2,
+          "train_loss": 0.3497230731444729,
+          "num_examples": 203652
+        }
+      ],
+      "eval": [
+        {
+          "client_id": 0,
+          "eval_loss": 0.4490453892901202,
+          "eval_acc": 0.8586802270577105,
+          "eval_f1": 0.7141932977145606,
+          "eval_auc": 0.8941540603500447,
+          "num_examples": 25368
+        },
+        {
+          "client_id": 1,
+          "eval_loss": 0.509900654225762,
+          "eval_acc": 0.7445055808835089,
+          "eval_f1": 0.6550424704668572,
+          "eval_auc": 0.8811211054243774,
+          "num_examples": 31805
+        },
+        {
+          "client_id": 2,
+          "eval_loss": 0.4632861741898048,
+          "eval_acc": 0.8300237660322511,
+          "eval_f1": 0.7014300947682633,
+          "eval_auc": 0.888479327550502,
+          "num_examples": 50913
+        }
+      ]
+    },
+    {
+      "train": [
+        {
+          "client_id": 0,
+          "train_loss": 0.29462359198136157,
+          "num_examples": 101468
+        },
+        {
+          "client_id": 1,
+          "train_loss": 0.39433441605446407,
+          "num_examples": 127216
+        },
+        {
+          "client_id": 2,
+          "train_loss": 0.34156101490689367,
+          "num_examples": 203652
+        }
+      ],
+      "eval": [
+        {
+          "client_id": 0,
+          "eval_loss": 0.3287640882454231,
+          "eval_acc": 0.8515846736045412,
+          "eval_f1": 0.7743562470871685,
+          "eval_auc": 0.8979769731012106,
+          "num_examples": 25368
+        },
+        {
+          "client_id": 1,
+          "eval_loss": 0.4071271726543035,
+          "eval_acc": 0.8034585756956454,
+          "eval_f1": 0.7732066742777448,
+          "eval_auc": 0.891253627732711,
+          "num_examples": 31805
+        },
+        {
+          "client_id": 2,
+          "eval_loss": 0.339821196680692,
+          "eval_acc": 0.8390195038595251,
+          "eval_f1": 0.7758561597147653,
+          "eval_auc": 0.8939877218380019,
+          "num_examples": 50913
+        }
+      ]
+    },
+    {
+      "train": [
+        {
+          "client_id": 0,
+          "train_loss": 0.29113080468108643,
+          "num_examples": 101468
+        },
+        {
+          "client_id": 1,
+          "train_loss": 0.3897310017210217,
+          "num_examples": 127216
+        },
+        {
+          "client_id": 2,
+          "train_loss": 0.3381407317759192,
+          "num_examples": 203652
+        }
+      ],
+      "eval": [
+        {
+          "client_id": 0,
+          "eval_loss": 0.3163956250591903,
+          "eval_acc": 0.853319142226427,
+          "eval_f1": 0.7760490907873556,
+          "eval_auc": 0.8993189433503329,
+          "num_examples": 25368
+        },
+        {
+          "client_id": 1,
+          "eval_loss": 0.4187450664983669,
+          "eval_acc": 0.8000628831944663,
+          "eval_f1": 0.768647813135358,
+          "eval_auc": 0.8891185628972034,
+          "num_examples": 31805
+        },
+        {
+          "client_id": 2,
+          "eval_loss": 0.3323773380425108,
+          "eval_acc": 0.8414353897825703,
+          "eval_f1": 0.7785175903536675,
+          "eval_auc": 0.8950677627844651,
+          "num_examples": 50913
+        }
+      ]
+    },
+    {
+      "train": [
+        {
+          "client_id": 0,
+          "train_loss": 0.2893402987966622,
+          "num_examples": 101468
+        },
+        {
+          "client_id": 1,
+          "train_loss": 0.38790875816459147,
+          "num_examples": 127216
+        },
+        {
+          "client_id": 2,
+          "train_loss": 0.3362149783660884,
+          "num_examples": 203652
+        }
+      ],
+      "eval": [
+        {
+          "client_id": 0,
+          "eval_loss": 0.31453959996664255,
+          "eval_acc": 0.858404288867865,
+          "eval_f1": 0.7796476052733645,
+          "eval_auc": 0.8994826137712498,
+          "num_examples": 25368
+        },
+        {
+          "client_id": 1,
+          "eval_loss": 0.4224400346128034,
+          "eval_acc": 0.7992454016664047,
+          "eval_f1": 0.7659623608399957,
+          "eval_auc": 0.8880796615926143,
+          "num_examples": 31805
+        },
+        {
+          "client_id": 2,
+          "eval_loss": 0.3327744974937271,
+          "eval_acc": 0.8435173727731621,
+          "eval_f1": 0.777734786809313,
+          "eval_auc": 0.8949892225265641,
+          "num_examples": 50913
+        }
+      ]
+    },
+    {
+      "train": [
+        {
+          "client_id": 0,
+          "train_loss": 0.2886520183546145,
+          "num_examples": 101468
+        },
+        {
+          "client_id": 1,
+          "train_loss": 0.3862490456209016,
+          "num_examples": 127216
+        },
+        {
+          "client_id": 2,
+          "train_loss": 0.3355733647822385,
+          "num_examples": 203652
+        }
+      ],
+      "eval": [
+        {
+          "client_id": 0,
+          "eval_loss": 0.3138977061365954,
+          "eval_acc": 0.85418637653737,
+          "eval_f1": 0.7763589948724452,
+          "eval_auc": 0.9006387733714744,
+          "num_examples": 25368
+        },
+        {
+          "client_id": 1,
+          "eval_loss": 0.4138929852297608,
+          "eval_acc": 0.8030183933343814,
+          "eval_f1": 0.7732137021572394,
+          "eval_auc": 0.8918158179686827,
+          "num_examples": 31805
+        },
+        {
+          "client_id": 2,
+          "eval_loss": 0.3313612108816154,
+          "eval_acc": 0.8408657906625027,
+          "eval_f1": 0.7780009268808425,
+          "eval_auc": 0.8955568388703705,
+          "num_examples": 50913
+        }
+      ]
+    }
+  ]
+}
