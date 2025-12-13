@@ -45,7 +45,8 @@ class LogisticRegression(nn.Module):
         return self.sigmoid(self.linear(x))
 
 
-def load_data(partition_id: int, num_partitions: int) -> Tuple[DataLoader, DataLoader]:
+def load_data(partition_id: int, 
+              num_partitions: int) -> Tuple[DataLoader, DataLoader]:
     data_dir = Path(__file__).parent.parent.parent / "data"
     data_filepath = str(data_dir / "BankA.csv")
     if partition_id == 0:
@@ -75,7 +76,6 @@ def load_data(partition_id: int, num_partitions: int) -> Tuple[DataLoader, DataL
                             shuffle=False)
     
     return trainloader, testloader
-
 
 def train(model: nn.Module, 
           trainloader: DataLoader, 
@@ -111,7 +111,6 @@ def train(model: nn.Module,
             running_loss += loss.item()
     avg_trainloss = running_loss / (len(trainloader) * epochs)
     return avg_trainloss
-
 
 def test(model: nn.Module, 
          testloader: DataLoader, 

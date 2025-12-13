@@ -50,7 +50,6 @@ def train(msg: Message, context: Context):
     content = RecordDict({"arrays": model_record, "metrics": metric_record})
     return Message(content=content, reply_to=msg)
 
-
 @app.evaluate()
 def evaluate(msg: Message, context: Context):
     partition_id = context.node_config["partition-id"]

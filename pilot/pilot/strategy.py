@@ -2,6 +2,22 @@ from typing import List, Any
 from flwr.serverapp.strategy import FedAvg, FedProx
 
 class HistoryStrategy:
+    """
+    A mixin class for Flower strategies to record metrics.
+
+    This class provides functionality to track both global (aggregated) and local
+    (per-client) metrics across federated learning rounds. It is designed to be
+    inherited by a primary Flower strategy class.
+
+    Attributes:
+        global_history (dict): A dictionary storing the history of aggregated metrics
+            for each round. Includes training loss, evaluation loss, and various
+            evaluation metrics (accuracy, F1, AUC).
+        local_history (dict): A dictionary storing the history of metrics reported by
+            individual clients for each round. Captures both training and evaluation
+            results on a per-client basis.
+        current_round (int): The current federated learning round number.
+    """
     def __init__(self):
         self.global_history = {
             "round": [],

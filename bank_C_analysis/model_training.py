@@ -286,7 +286,6 @@ def save_results(results_dict: Dict[str, Dict[str, float]],
         filename (str): Name of the file to save the results to.
     """
     print(f"\nSaving results to {filename}...")
-    # Use float() to ensure numpy floats are converted to standard Python floats before serialization
     serializable_results = {k: {metric: float(v_metric) for metric, v_metric in v.items()} for k, v in results_dict.items()}
     with open(filename, 'w') as f:
         json.dump(serializable_results, f, indent=4)

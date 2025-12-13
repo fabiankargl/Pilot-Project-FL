@@ -5,6 +5,7 @@ import os
 import glob
 import itertools
 import re
+from typing import Dict, Any, Optional, Tuple, Iterator
 
 plt.rcParams['font.size'] = 11
 plt.rcParams['axes.labelsize'] = 12
@@ -13,8 +14,17 @@ plt.rcParams['legend.fontsize'] = 10
 plt.rcParams['figure.dpi'] = 150
 RESULTS_DIR = "results"
 
-def load_experiment_data(exp_name: str):
-    """Loads global and local history based on the experiment name."""
+def load_experiment_data(exp_name: str) -> Tuple[Optional[Dict], Optional[Dict]]:
+    """
+    Loads global and local history JSON files for a given experiment name.
+
+    Args:
+        exp_name: The unique identifier for the experiment run.
+
+    Returns:
+        A tuple containing the global and local history dictionaries.
+        Returns (None, None) if files are not found.
+    """
     global_file = os.path.join(RESULTS_DIR, f"global_history_{exp_name}.json")
     local_file = os.path.join(RESULTS_DIR, f"local_history_{exp_name}.json")
     
@@ -28,8 +38,20 @@ def load_experiment_data(exp_name: str):
         
     return global_hist, local_hist
 
-def extract_client_data(local_history, metric_key):
-    """Structures client data for plotting."""
+def extract_client_data(local_history: Dict[str, Any], 
+                        metric_key: str) -> Dict[int, Dict[str, list]]:
+    """
+    Parses local history to extract a specific metric for each client over all rounds.
+
+    Args:
+        local_history: The local history dictionary containing results from all
+            clients across all rounds.
+        metric_key: The key for the metric to extract.
+
+    Returns:
+        A dictionary where keys are client IDs and values are dictionaries
+        containing lists of rounds and corresponding metric values.
+    """
     client_data = {}
     if "client_results" not in local_history:
         return {}
@@ -54,10 +76,17 @@ def extract_client_data(local_history, metric_key):
             client_data[client_id]["values"].append(metric_value)
     return client_data
 
-def format_legend_label(exp_name):
+def format_legend_label(exp_name: str) -> str:
     """
-    Parses the filename and creates a clean legend label.
-    Format: Model Strategy (Settings)
+    Parses an experiment name string to create a clean, formatted legend label.
+
+    The format is: "Model Strategy (Rounds, Epochs, LR, Mu)".
+
+    Args:
+        exp_name: The experiment name string.
+
+    Returns:
+        A formatted string suitable for plot legends.
     """
     model = "IncomeNet-66k"
     if "logreg" in exp_name.lower():
@@ -89,8 +118,20 @@ def format_legend_label(exp_name):
     settings_str = ", ".join(settings)
     return f"{model} {strategy} ({settings_str})"
 
-def get_plot_style(exp_name, color_cycle, marker_cycle):
-    """Determines color and linestyle based on experiment type."""
+def get_plot_style(exp_name: str, 
+                   color_cycle: Iterator, 
+                   marker_cycle: Iterator) -> Dict[str, Any]:
+    """
+    Determines the plot style (color, marker, linestyle) for an experiment.
+
+    Args:
+        exp_name: The name of the experiment.
+        color_cycle: An iterator for plot colors.
+        marker_cycle: An iterator for plot markers.
+
+    Returns:
+        A dictionary containing style properties for plotting.
+    """
     style = {
         'color': next(color_cycle),
         'marker': next(marker_cycle),
@@ -102,8 +143,20 @@ def get_plot_style(exp_name, color_cycle, marker_cycle):
         
     return style
 
-def plot_single_experiment(exp_name, global_history, local_history):
-    """Creates the detail plot for a single experiment."""
+def plot_single_experiment(exp_name: str, 
+                           global_history: Dict[str, Any], 
+                           local_history: Dict[str, Any]) -> None:
+    """
+    Generates and saves a detailed 2x2 plot for a single experiment.
+
+    The plot shows global and per-client metrics for evaluation loss, accuracy,
+    F1 score, and AUC over the federated learning rounds.
+
+    Args:
+        exp_name: The unique name of the experiment.
+        global_history: The aggregated global metrics history.
+        local_history: The per-client local metrics history.
+    """
     fig, axes = plt.subplots(2, 2, figsize=(16, 10))
     fig.patch.set_facecolor('white')
     
@@ -150,8 +203,17 @@ def plot_single_experiment(exp_name, global_history, local_history):
     plt.close()
     print(f"  -> Detail plot saved: plot_{exp_name}.png")
 
-def plot_comparison(all_experiments):
-    """Compares all found experiments with an external legend."""
+def plot_comparison(all_experiments: Dict[str, Tuple[Dict, Dict]]) -> None:
+    """
+    Generates and saves a comparison plot for multiple experiments.
+
+    This creates a 2x2 grid comparing the global evaluation loss, accuracy, F1,
+    and AUC for all provided experiments.
+
+    Args:
+        all_experiments: A dictionary mapping experiment names to their
+            (global_history, local_history) data tuples.
+    """
     if len(all_experiments) < 2:
         print("Not enough experiments for a comparison plot.")
         return

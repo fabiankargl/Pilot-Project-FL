@@ -12,11 +12,11 @@ app = ServerApp()
 @app.main()
 def main(grid: Grid, context: Context) -> None:
     # Read run config
-    fraction_train: float = context.run_config["fraction-train"]
-    fraction_evaluate: float = context.run_config["fraction-evaluate"]
-    num_rounds: int = context.run_config["num-server-rounds"]
-    lr: float = context.run_config["lr"]
-    min_clients: int = context.run_config["min-available-clients"]
+    fraction_train = context.run_config["fraction-train"]
+    fraction_evaluate = context.run_config["fraction-evaluate"]
+    num_rounds = context.run_config["num-server-rounds"]
+    lr = context.run_config["lr"]
+    min_clients = context.run_config["min-available-clients"]
     local_epochs = context.run_config.get("local-epochs", 1)
     model_type = context.run_config.get("model-type", "nn")
     strategy_name = context.run_config.get("strategy", "fedavg").lower()
@@ -59,7 +59,6 @@ def main(grid: Grid, context: Context) -> None:
     else:
         raise ValueError(f"Unknown strategy: {strategy_name}")
 
-    # Start strategy, run FedAvg for `num_rounds`
     result = strategy.start(
         grid=grid,
         initial_arrays=arrays,
@@ -79,7 +78,6 @@ def main(grid: Grid, context: Context) -> None:
     with open(local_hist_path, "w") as f:
         json.dump(strategy.local_history, f, indent=2)
 
-    # Save final model to disk
     print("\nSaving final model to disk...")
     state_dict = result.arrays.to_torch_state_dict()
     model_path = os.path.join(results_dir, f"final_model_{run_name}.pt")

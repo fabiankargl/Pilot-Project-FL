@@ -1,8 +1,9 @@
 import toml
 import subprocess
 import time
+from typing import Dict, Any, List
 
-experiments = [
+experiments: List[Dict[str, Any]] = [
     {
         "strategy": "fedavg", 
         "model-type": "logreg", 
@@ -61,7 +62,17 @@ experiments = [
 
 TOML_FILE = "pyproject.toml"
 
-def update_toml_config(settings):
+def update_toml_config(settings: Dict[str, Any]) -> bool:
+    """
+    Updates the Flower app configuration in the pyproject.toml file.
+
+    Args:
+        settings: A dictionary containing the experiment settings to write
+                  to the TOML file.
+
+    Returns:
+        True if the file was updated successfully, False otherwise.
+    """
     try:
         with open(TOML_FILE, "r") as f:
             data = toml.load(f)
@@ -87,7 +98,10 @@ def update_toml_config(settings):
         print(f"Error updating TOML file: {e}")
         return False
 
-def run_simulation():
+def run_simulation() -> None:
+    """
+    Executes the Flower simulation using a subprocess call.
+    """
     print(">> Starting simulation...")
     try:
         subprocess.run(["flwr", "run", "."], check=True)
@@ -97,7 +111,7 @@ def run_simulation():
     except FileNotFoundError:
         print("!! Command 'flwr' not found. Is the virtual environment activated? !!\n")
 
-def main():
+def main() -> None:
     print("="*60)
     print(f"STARTING 10-ROUND EXPERIMENTS ({len(experiments)} runs)")
     print("="*60)
