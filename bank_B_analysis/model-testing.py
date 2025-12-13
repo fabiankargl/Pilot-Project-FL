@@ -3,16 +3,15 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+from typing import List
 
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import accuracy_score, f1_score, roc_auc_score
-
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.neural_network import MLPClassifier
-
 
 BASE = os.path.dirname(os.path.abspath(__file__))
 
@@ -21,9 +20,16 @@ CSV_PATH = os.path.join(BASE, "..", "data", "BankB.csv")
 PLOT_DIR = os.path.join(BASE, "plots")
 os.makedirs(PLOT_DIR, exist_ok=True)
 
-
 def safe_name(name: str) -> str:
-    """macht aus Spaltennamen einfache Dateinamen"""
+    """
+    Converts a string into a safe format for a filename.
+
+    Args:
+        name: The input string, typically a column name.
+
+    Returns:
+        A sanitized string suitable for use in a filename.
+    """
     return (
         str(name)
         .replace(" ", "_")
@@ -35,56 +41,66 @@ def safe_name(name: str) -> str:
         .replace(":", "_")
     )
 
+def visualize_data(csv_path: str = CSV_PATH, 
+                   output_dir: str = PLOT_DIR) -> None:
+    """
+    Loads data from a CSV, generates various visualizations, and saves them as PNG files.
 
-def visualize_data(csv_path: str = CSV_PATH, output_dir: str = PLOT_DIR) -> None:
+    Generates:
+    - Bar plot for the target variable 'income'.
+    - Bar plots for all categorical columns.
+    - Histograms for all numerical columns.
+    - Box plots for numerical columns grouped by 'income'.
+    - A correlation heatmap for numerical columns.
 
+    Args:
+        csv_path: The path to the input CSV file.
+        output_dir: The directory where the plot images will be saved.
+    """
     df = pd.read_csv(csv_path)
 
     if "income" in df.columns:
         plt.figure()
         df["income"].value_counts().plot(kind="bar")
-        plt.title("Verteilung income")
-        plt.xlabel("income")
-        plt.ylabel("Anzahl")
+        plt.title("Income Distribution")
+        plt.xlabel("Income")
+        plt.ylabel("Count")
         plt.tight_layout()
         plt.savefig(os.path.join(output_dir, "dist_income.png"))
         plt.close()
 
     cat_cols = df.select_dtypes(include=["object", "category"]).columns.tolist()
-
     for col in cat_cols:
         plt.figure()
         df[col].value_counts().plot(kind="bar")
-        plt.title(f"Verteilung {col}")
+        plt.title(f"Distribution of {col}")
         plt.xlabel(col)
-        plt.ylabel("Anzahl")
+        plt.ylabel("Count")
         plt.tight_layout()
         fname = f"dist_cat_{safe_name(col)}.png"
         plt.savefig(os.path.join(output_dir, fname))
         plt.close()
 
     num_cols = df.select_dtypes(include=["int64", "float64"]).columns.tolist()
-
     for col in num_cols:
         plt.figure()
         plt.hist(df[col].dropna(), bins=30)
-        plt.title(f"Histogramm {col}")
+        plt.title(f"Histogram of {col}")
         plt.xlabel(col)
-        plt.ylabel("Anzahl")
+        plt.ylabel("Count")
         plt.tight_layout()
         fname = f"hist_{safe_name(col)}.png"
         plt.savefig(os.path.join(output_dir, fname))
         plt.close()
 
     if "income" in df.columns:
-        for col in num_cols:
-            if col == "income":
-                continue
+        # Exclude the target variable itself from boxplots against the target
+        for col in [c for c in num_cols if c != "income"]:
             plt.figure()
             df.boxplot(column=col, by="income")
-            plt.title(f"{col} nach income")
+            plt.title(f"{col} by Income")
             plt.suptitle("")
-            plt.xlabel("income")
+            plt.xlabel("Income")
             plt.ylabel(col)
             plt.tight_layout()
             fname = f"box_{safe_name(col)}_by_income.png"
@@ -95,15 +111,26 @@ def visualize_data(csv_path: str = CSV_PATH, output_dir: str = PLOT_DIR) -> None
         corr = df[num_cols].corr()
         plt.figure(figsize=(8, 6))
         sns.heatmap(corr, annot=False, cmap="coolwarm", fmt=".2f")
-        plt.title("Korrelations-Heatmap (numerische Features)")
+        plt.title("Correlation Heatmap (Numerical Features)")
         plt.tight_layout()
         plt.savefig(os.path.join(output_dir, "corr_heatmap_numerical.png"))
         plt.close()
 
-    print(f"Plots gespeichert in: {output_dir}")
+    print(f"Plots saved in: {output_dir}")
 
 
 def load_data(csv_path: str = CSV_PATH):
+    """
+    Loads and preprocesses the data from the specified CSV file.
+
+    Preprocessing steps:
+    - Binarizes the target column 'income' ('>50K' -> 1, else 0).
+    - Drops the 'institute' column if it exists.
+    - Converts categorical features into dummy variables.
+
+    Args:
+        csv_path: The path to the input CSV file.
+    """
     df = pd.read_csv(csv_path)
 
     target_col = "income"
@@ -117,32 +144,46 @@ def load_data(csv_path: str = CSV_PATH):
     y = df[target_col]
     X = df.drop(columns=[target_col] + drop_cols)
 
-    # Kategoriale Features in Dummies umwandeln
+    # Convert categorical features to dummy variables
     X = pd.get_dummies(X, drop_first=True)
 
     return X, y
 
+def plot_feature_importance(importances: np.ndarray,
+                            feature_names: List[str],
+                            title: str,
+                            filename: str,
+                            top_n: int = 20) -> None:
+    """
+    Creates and saves a horizontal bar plot of feature importances.
 
-def plot_feature_importance(importances, feature_names, title, filename, top_n=20):
-    """Speichert einen Bar-Plot der wichtigsten Features."""
+    Args:
+        importances: An array of feature importance values.
+        feature_names: A list of names for the features.
+        title: The title of the plot.
+        filename: The name of the file to save the plot to.
+        top_n: The number of top features to display.
+    """
     importances = np.array(importances)
     feature_names = np.array(feature_names)
 
-    idx = np.argsort(importances)[::-1]  # absteigend
+    # Get indices of top N importances in descending order
+    idx = np.argsort(importances)[::-1]
     idx = idx[:top_n]
 
-    plt.figure(figsize=(8, 6))
+    plt.figure(figsize=(10, 8))
     plt.barh(range(len(idx)), importances[idx][::-1])
     plt.yticks(range(len(idx)), feature_names[idx][::-1])
-    plt.xlabel("Wichtigkeit")
+    plt.xlabel("Importance")
     plt.title(title)
     plt.tight_layout()
     plt.savefig(os.path.join(PLOT_DIR, filename))
     plt.close()
 
-
-
 def train_and_evaluate():
+    """
+    Trains and evaluates multiple classification models.
+    """
     X, y = load_data()
     feature_names = X.columns.tolist()
 
@@ -183,10 +224,10 @@ def train_and_evaluate():
     print("-" * 50)
 
     for name, model in models.items():
-        print(f"Training: {name}...")
+        print(f"Training {name}...")
 
         if name in ["SimpleNN", "LogisticRegression"]:
-            model.fit(X_train_scaled, y_train)
+            model.fit(X_train_scaled, y_train)  # Use scaled data
             X_test_used = X_test_scaled
         else:
             model.fit(X_train, y_train)
@@ -224,17 +265,17 @@ def train_and_evaluate():
             plot_feature_importance(
                 importances=importances,
                 feature_names=feature_names,
-                title="Feature Importance LogisticRegression (|coef|)",
+                title="Feature Importance Logistic Regression (|coef|)",
                 filename="feature_importance_LogisticRegression.png",
                 top_n=20,
             )
 
-
 def main():
+    """
+    Main function to run the data visualization and model training pipeline.
+    """
     visualize_data()
-
     train_and_evaluate()
-
 
 if __name__ == "__main__":
     main()

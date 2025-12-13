@@ -1,0 +1,11 @@
+{
+  "num-server-rounds": 5,
+  "fraction-train": 1.0,
+  "fraction-evaluate": 1.0,
+  "local-epochs": 3,
+  "lr": 0.05,
+  "min-available-clients": 3,
+  "strategy": "fedprox",
+  "proximal-mu": 1.0,
+  "model-type": "logreg"
+}

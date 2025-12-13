@@ -1,0 +1,11 @@
+{
+  "num-server-rounds": 10,
+  "fraction-train": 1.0,
+  "fraction-evaluate": 1.0,
+  "local-epochs": 3,
+  "lr": 0.005,
+  "min-available-clients": 3,
+  "strategy": "fedavg",
+  "proximal-mu": 0.0,
+  "model-type": "nn"
+}

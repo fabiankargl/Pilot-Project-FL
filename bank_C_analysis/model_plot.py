@@ -25,7 +25,6 @@ except FileNotFoundError:
     df_results = pd.DataFrame(data)
     print("Using static fallback data for plotting.")
 
-
 plt.figure(figsize=(10, 6))
 sns.scatterplot(data=df_results, x='AUC_Score', y='Macro_F1_Score', s=200, hue='Model', style='Model')
 
