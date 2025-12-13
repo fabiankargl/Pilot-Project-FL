@@ -14,12 +14,10 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import classification_report, accuracy_score, f1_score, roc_auc_score
 from typing import Tuple, Dict, Any, List
 
-
 FILE_PATH = "../data/BankC.csv"
 RANDOM_STATE = 42
 
 results: Dict[str, Dict[str, float]] = {}
-
 
 def load_preprocessing(filepath: str) -> Tuple[pd.DataFrame, pd.DataFrame, pd.Series, pd.Series]:
     """
@@ -57,7 +55,6 @@ def load_preprocessing(filepath: str) -> Tuple[pd.DataFrame, pd.DataFrame, pd.Se
         X = X.drop(columns=cols_to_drop)
 
     return train_test_split(X, y, test_size=0.2, random_state=RANDOM_STATE)
-
 
 def evaluate_model(name: str, 
                    y_test: pd.Series, 
@@ -166,7 +163,6 @@ def run_decision_tree(X_train: pd.DataFrame,
     print("Best Decision Tree F1-Score:", grid_tree.best_score_)
     print("Best Parameter:", grid_tree.best_params_)
 
-
 def run_logistic_regression(X_train_scaled: np.ndarray, 
                             y_train: pd.Series, 
                             X_test_scaled: np.ndarray, 
@@ -202,7 +198,6 @@ def run_logistic_regression(X_train_scaled: np.ndarray,
     print("Best Logistic Regression F1-Score:", grid_log.best_score_)
     print("Best Parameter:", grid_log.best_params_)
 
-
 class IncomeNet(nn.Module):
     """
     A simple feed-forward neural network for binary classification.
@@ -229,7 +224,6 @@ class IncomeNet(nn.Module):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return self.network(x)
-
 
 def run_pytorch_nn(X_train_scaled: np.ndarray, 
                    y_train: pd.Series, 
@@ -297,7 +291,6 @@ def save_results(results_dict: Dict[str, Dict[str, float]],
     with open(filename, 'w') as f:
         json.dump(serializable_results, f, indent=4)
     print("Results saved.")
-
 
 if __name__ == "__main__":
     X_train, X_test, y_train, y_test = load_preprocessing(FILE_PATH)

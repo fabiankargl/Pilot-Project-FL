@@ -1,7 +1,6 @@
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
-from typing import NoReturn
 
 FILE_PATH = "../data/BankC.csv" 
 
@@ -43,9 +42,18 @@ def load_and_analyze(filepath: str) -> pd.DataFrame:
     
     return df
 
-def run_plots(df: pd.DataFrame) -> NoReturn:
+def run_plots(df: pd.DataFrame) -> None:
     """
     Generates and displays a series of exploratory data analysis (EDA) plots.
+
+    The generated plots include:
+    - Count and percentage plots for the target variable 'income'.
+    - Distribution of 'age'.
+    - Boxplot of 'age' grouped by 'income'.
+    - Count plot of 'education' grouped by 'income'.
+
+    Args:
+        df (pd.DataFrame): The cleaned DataFrame to generate plots from.
     """
     sns.set_theme(style="whitegrid")
 
