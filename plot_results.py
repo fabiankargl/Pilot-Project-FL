@@ -11,7 +11,7 @@ plt.rcParams['axes.labelsize'] = 12
 plt.rcParams['axes.titlesize'] = 14
 plt.rcParams['legend.fontsize'] = 10
 plt.rcParams['figure.dpi'] = 150
-RESULTS_DIR = "final_results"
+RESULTS_DIR = "presentation_results"
 
 def load_experiment_data(exp_name: str) -> Tuple[Optional[Dict], Optional[Dict]]:
     """
@@ -109,15 +109,34 @@ def get_plot_style(exp_name: str,
     Returns:
         A dictionary containing style properties for plotting.
     """
+    exp_lower = exp_name.lower()
+    
     style = {
         'color': next(color_cycle),
         'marker': next(marker_cycle),
         'linestyle': '-'
     }
-    
-    if "logreg" in exp_name.lower():
-        style['linestyle'] = '--'
+
+    if "logreg" in exp_lower:
+        style['linestyle'] = '--' 
         
+        if "fedprox" in exp_lower:
+            style['color'] = '#9467bd' 
+            style['marker'] = 'x'
+        elif "fedavg" in exp_lower:
+            style['color'] = '#ff7f0e' 
+            style['marker'] = 'v'      
+            
+    else:
+        style['linestyle'] = '-'  
+        
+        if "fedprox" in exp_lower:
+            style['color'] = '#2ca02c' 
+            style['marker'] = 'D'     
+        elif "fedavg" in exp_lower:
+            style['color'] = '#1f77b4'  
+            style['marker'] = 'o'      
+
     return style
 
 def plot_single_experiment(exp_name: str, 
@@ -182,14 +201,15 @@ def plot_single_experiment(exp_name: str,
 
 def plot_comparison(all_experiments: Dict[str, Tuple[Dict, Dict]]) -> None:
     """
-    Generates and saves a comparison plot for multiple experiments.
+    Generates and saves a comprehensive 2x2 comparison plot for multiple experiments.
 
-    This creates a 2x2 grid comparing the global evaluation loss, accuracy, F1,
-    and AUC for all provided experiments.
+    This function visualizes the global performance metrics (loss, accuracy, F1-score,
+    and AUC) across different experimental runs. It plots each experiment's global
+    history on four separate subplots.
 
     Args:
-        all_experiments: A dictionary mapping experiment names to their
-            (global_history, local_history) data tuples.
+        all_experiments: A dictionary where keys are experiment names and values are
+            tuples containing the global and local history dictionaries for that run.
     """
     if len(all_experiments) < 2:
         print("Not enough experiments for a comparison plot.")
@@ -222,11 +242,25 @@ def plot_comparison(all_experiments: Dict[str, Tuple[Dict, Dict]]) -> None:
         ax.grid(True, which='major', linestyle='--', linewidth=0.7, color='gray', alpha=0.5, zorder=0)
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
         
+        max_round = 0
+        
+        current_metric_final_values = {}
+
         for exp_name in sorted(all_experiments.keys()):
             glob_hist, _ = all_experiments[exp_name]
             rounds = glob_hist["round"]
             values = glob_hist[metric_key]
             
+            if rounds[-1] > max_round:
+                max_round = rounds[-1]
+
+            if "logreg" in exp_name.lower():
+                current_metric_final_values['LogReg'] = (rounds[-1], values[-1])
+            else:
+                current_val = values[-1]
+                if 'IncomeNet' not in current_metric_final_values or current_val > current_metric_final_values['IncomeNet'][1]:
+                    current_metric_final_values['IncomeNet'] = (rounds[-1], current_val)
+
             style = exp_styles[exp_name]
             label_text = format_legend_label(exp_name)
             
@@ -243,6 +277,31 @@ def plot_comparison(all_experiments: Dict[str, Tuple[Dict, Dict]]) -> None:
                 if label_text not in legend_labels:
                     legend_labels.append(label_text)
                     legend_handles.append(line)
+
+        target_metrics = ['eval_acc', 'eval_f1', 'eval_auc']
+        
+        if metric_key in target_metrics and 'IncomeNet' in current_metric_final_values and 'LogReg' in current_metric_final_values:
+            x_pos, y_incomenet = current_metric_final_values['IncomeNet']
+            _, y_logreg = current_metric_final_values['LogReg']
+            
+            gap = y_incomenet - y_logreg
+            mid_point = (y_incomenet + y_logreg) / 2
+            
+            ax.annotate(
+                '', xy=(x_pos, y_incomenet), xytext=(x_pos, y_logreg),
+                arrowprops=dict(arrowstyle='<->', color='red', lw=2)
+            )
+            
+            ax.text(
+                x_pos - (max_round * 0.05), mid_point, 
+                f'+{gap*100:.1f}%\nLift', 
+                color='red', 
+                fontweight='bold', 
+                fontsize=11,
+                ha='right', 
+                va='center',
+                bbox=dict(boxstyle="round,pad=0.3", fc="white", ec="red", alpha=0.8)
+            )
 
         ax.set_title(title, fontweight='bold', fontsize=12)
         ax.set_xlabel("Round", fontweight='bold')
@@ -268,7 +327,7 @@ def plot_comparison(all_experiments: Dict[str, Tuple[Dict, Dict]]) -> None:
     plt.savefig(save_path, dpi=300, bbox_inches='tight')
     plt.close()
     print(f"Final benchmark plot saved: {save_path}")
-
+    
 def main() -> None:
     search_pattern = os.path.join(RESULTS_DIR, "global_history_*.json")
     files = glob.glob(search_pattern)
