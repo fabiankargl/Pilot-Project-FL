@@ -1,5 +1,4 @@
 import torch
-import torch.nn as nn
 import time
 import matplotlib.pyplot as plt
 import seaborn as sns
