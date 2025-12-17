@@ -13,8 +13,14 @@ from sklearn.tree import DecisionTreeClassifier, export_text
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import classification_report, accuracy_score, f1_score, roc_auc_score
 from typing import Tuple, Dict, Any, List
+from xgboost import XGBClassifier
 
 FILE_PATH = "../data/BankC.csv"
+FILE_PATHS = [
+    "../data/BankA.csv",
+    "../data/BankB.csv",
+    "../data/BankC.csv"
+]
 RANDOM_STATE = 42
 
 results: Dict[str, Dict[str, float]] = {}
@@ -55,6 +61,53 @@ def load_preprocessing(filepath: str) -> Tuple[pd.DataFrame, pd.DataFrame, pd.Se
         X = X.drop(columns=cols_to_drop)
 
     return train_test_split(X, y, test_size=0.2, random_state=RANDOM_STATE)
+
+def load_preprocessing_multi_bank(filepaths: List[str]) -> Tuple[pd.DataFrame, pd.DataFrame, pd.Series, pd.Series]:
+    """
+    Loads, preprocesses and combines multiple bank datasets into a single centralized dataset.
+
+    Args:
+        filepaths (List[str]): A list of file paths to the bank CSV datasets.
+
+    Returns:
+        Tuple[pd.DataFrame, pd.DataFrame, pd.Series, pd.Series]: A tuple containing the split data:
+        (X_train, X_test, y_train, y_test).
+    """
+    print("\n--- Preprocessing: Centralized Multi-Bank Baseline ---")
+
+    dfs = []
+    for path in filepaths:
+        df = pd.read_csv(path, na_values='?')
+        df = df.drop_duplicates().dropna()
+        dfs.append(df)
+
+    df = pd.concat(dfs, axis=0, ignore_index=True)
+    print(f"Combined dataset size: {df.shape}")
+
+    # Target Mapping
+    df["income"] = df["income"].map({'<=50K': 0, '>50K': 1})
+    print("Target distribution:\n", df["income"].value_counts())
+
+    # One-Hot Encoding
+    df_encoded = pd.get_dummies(df, drop_first=True)
+
+    # Feature Separation
+    X = df_encoded.drop(columns=["income"])
+    y = df_encoded["income"]
+
+    # Remove institute columns if present
+    cols_to_drop = [c for c in X.columns if 'institute' in c.lower()]
+    if cols_to_drop:
+        X = X.drop(columns=cols_to_drop)
+
+    return train_test_split(
+        X,
+        y,
+        test_size=0.2,
+        random_state=RANDOM_STATE,
+        stratify=y
+    )
+
 
 def evaluate_model(name: str, 
                    y_test: pd.Series, 
@@ -197,6 +250,69 @@ def run_logistic_regression(X_train_scaled: np.ndarray,
 
     print("Best Logistic Regression F1-Score:", grid_log.best_score_)
     print("Best Parameter:", grid_log.best_params_)
+    
+def run_xgboost(X_train: pd.DataFrame,
+                y_train: pd.Series,
+                X_test: pd.DataFrame,
+                y_test: pd.Series) -> None:
+    """
+    Runs XGBoost classification and a corresponding GridSearchCV.
+
+    Args:
+        X_train, y_train, X_test, y_test (pd.DataFrame, pd.Series, pd.DataFrame, pd.Series):
+        Training and test datasets.
+    """
+    print("\n--- XGBoost & GridSearch ---")
+
+    # Base Model
+    xgb_model = XGBClassifier(
+        n_estimators=200,
+        max_depth=5,
+        learning_rate=0.1,
+        subsample=0.8,
+        colsample_bytree=0.8,
+        objective="binary:logistic",
+        eval_metric="logloss",
+        random_state=RANDOM_STATE,
+        n_jobs=-1
+    )
+
+    xgb_model.fit(X_train, y_train)
+    y_pred = xgb_model.predict(X_test)
+    y_prob = xgb_model.predict_proba(X_test)[:, 1]
+
+    evaluate_model("XGBoost (Base)", y_test, y_pred, y_prob)
+
+    # GridSearch
+    print("Running GridSearchCV for XGBoost...")
+    param_grid_xgb: Dict[str, List[Any]] = {
+        'n_estimators': [100, 200],
+        'max_depth': [3, 5, 7],
+        'learning_rate': [0.05, 0.1],
+        'subsample': [0.8, 1.0],
+        'colsample_bytree': [0.8, 1.0]
+    }
+
+    xgb = XGBClassifier(
+        objective="binary:logistic",
+        eval_metric="logloss",
+        random_state=RANDOM_STATE,
+        n_jobs=-1
+    )
+
+    grid_xgb = GridSearchCV(
+        xgb,
+        param_grid_xgb,
+        cv=3,
+        scoring='f1_macro',
+        n_jobs=-1
+    )
+
+    grid_xgb.fit(X_train, y_train)
+
+    print("Best XGBoost F1-Score:", grid_xgb.best_score_)
+    print("Best Parameters:", grid_xgb.best_params_)
+
 
 class IncomeNet(nn.Module):
     """
@@ -249,7 +365,7 @@ def run_pytorch_nn(X_train_scaled: np.ndarray,
     input_dim = X_train_tensor.shape[1]
     model = IncomeNet(input_dim)
     criterion = nn.BCELoss()
-    optimizer = optim.Adam(model.parameters(), lr=0.001)
+    optimizer = optim.Adam(model.parameters(), lr=0.005)
 
     epochs = 20
     print(f"Starting training for {epochs} epochs...")
@@ -292,7 +408,7 @@ def save_results(results_dict: Dict[str, Dict[str, float]],
     print("Results saved.")
 
 if __name__ == "__main__":
-    X_train, X_test, y_train, y_test = load_preprocessing(FILE_PATH)
+    X_train, X_test, y_train, y_test = load_preprocessing_multi_bank(FILE_PATHS)
 
     # Scaling (Required for Logistic Regression & Neural Networks)
     scaler = StandardScaler()
@@ -305,6 +421,8 @@ if __name__ == "__main__":
     run_decision_tree(X_train, y_train, X_test, y_test, feature_names)
 
     run_logistic_regression(X_train_scaled, y_train, X_test_scaled, y_test)
+    
+    run_xgboost(X_train, y_train, X_test, y_test)
 
     run_pytorch_nn(X_train_scaled, y_train, X_test_scaled, y_test)
 

@@ -1,18 +1,22 @@
 {
     "RandomForest": {
-        "AUC_Score": 0.9033134290964384,
-        "Macro_F1_Score": 0.758357041251778
+        "AUC_Score": 0.9076649421757821,
+        "Macro_F1_Score": 0.7812958271210797
     },
     "DecisionTree": {
-        "AUC_Score": 0.8985869636755129,
-        "Macro_F1_Score": 0.7591695574787967
+        "AUC_Score": 0.9005326145059283,
+        "Macro_F1_Score": 0.7851215079205585
     },
     "LogisticRegression": {
-        "AUC_Score": 0.894417714858643,
-        "Macro_F1_Score": 0.7492789407765253
+        "AUC_Score": 0.8933936974233713,
+        "Macro_F1_Score": 0.7751706325229171
+    },
+    "XGBoost": {
+        "AUC_Score": 0.9173277182817842,
+        "Macro_F1_Score": 0.8051869971048596
     },
     "PyTorchNN": {
-        "AUC_Score": 0.900842938224297,
-        "Macro_F1_Score": 0.7543666132653362
+        "AUC_Score": 0.9024259512380672,
+        "Macro_F1_Score": 0.7824276026194991
     }
 }
