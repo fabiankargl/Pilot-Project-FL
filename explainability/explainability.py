@@ -75,7 +75,7 @@ def calculate_feature_importance(model: torch.nn.Module,
     importances: Dict[str, float] = {}
     X_numpy = X_tensor.numpy()
     
-    print("   ... Calculating Importance (this may take a moment) ...")
+    print("   ... Calculating Importance ...")
     for feature, indices in feature_groups.items():
         if not indices: continue
         
