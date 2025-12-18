@@ -5,22 +5,70 @@ from typing import List, Tuple, Dict, Set
 from sklearn.preprocessing import StandardScaler
 from pilot.task import IncomeNet
 
+def explain_local_prediction(model: torch.nn.Module, 
+                             X_tensor: torch.Tensor, 
+                             feature_groups: Dict[str, List[int]], 
+                             feature_names: List[str],
+                             customer_idx: int = 0) -> None:
+    """
+    Explains a single prediction for a specific customer using a gradient-based method.
+
+    Args:
+        model (torch.nn.Module): The trained model to explain.
+        X_tensor (torch.Tensor): The preprocessed input data for all customers.
+        feature_groups (Dict[str, List[int]]): Maps original feature names to their column indices.
+        feature_names (List[str]): A list of all feature names after encoding/padding.
+        customer_idx (int): The index of the customer in `X_tensor` to explain.
+    """
+    model.eval()
+    
+    single_input = X_tensor[customer_idx].unsqueeze(0).detach().clone()
+    single_input.requires_grad_() 
+    
+    output = model(single_input)
+    prediction_score = output.item()
+    decision = "Approved (>50k)" if prediction_score > 0.5 else "Rejected (<=50k)"
+    
+    print(f"\n--- Local explainability (Customer #{customer_idx}) ---")
+    print(f"   Prediction: {decision}")
+    print(f"   Score:      {prediction_score:.4f}")
+    
+    output.backward()
+    grads = single_input.grad.data.numpy().flatten()
+    
+    local_impacts = {}
+    
+    for feature, indices in feature_groups.items():
+        if not indices: continue
+        
+        group_grads = grads[indices]
+        input_vals = single_input.detach().numpy().flatten()[indices]
+        
+        impact = np.sum(np.abs(group_grads * input_vals))
+        local_impacts[feature] = impact
+
+    sorted_local = sorted(local_impacts.items(), key=lambda x: x[1], reverse=True)
+    
+    print("Top 3 Factors for THIS customer:")
+    for f, v in sorted_local[:3]:
+        print(f"   -> {f:<15}: Impact {v:.4f}")
+
+
 def calculate_feature_importance(model: torch.nn.Module, 
                                  filepath: str, 
                                  expected_dim: int = 95) -> List[Tuple[str, float]]:
     """
-    Calculates and prints permutation feature importance for a given model and dataset.
-
+    Calculates global feature importance and demonstrates local explanations.
     Args:
-        model (torch.nn.Module): The trained PyTorch model to evaluate.
-        filepath (str): The path to the CSV data file.
-        expected_dim (int, optional): The expected input dimension for the model.
-                                      Defaults to 95.
+        model (torch.nn.Module): The trained model to be analyzed.
+        filepath (str): The path to the raw CSV data file.
+        expected_dim (int): The feature dimension the model expects as input.
 
     Returns:
-        List[Tuple[str, float]]: A list of  tuples, sorted in descending order of importance.
+        List[Tuple[str, float]]: A list of (feature_name, importance_score) tuples,
+                                 sorted by importance in descending order.
     """
-    print(f"\n--- EXPLAINABILITY ANALYSIS: {filepath} ---")
+    print(f"--- Explainability analysis: {filepath} ---")
     
     df: pd.DataFrame = pd.read_csv(filepath, na_values='?')
     df = df.drop_duplicates().dropna()
@@ -75,12 +123,11 @@ def calculate_feature_importance(model: torch.nn.Module,
     importances: Dict[str, float] = {}
     X_numpy = X_tensor.numpy()
     
-    print("   ... Calculating Importance ...")
+    print("   ... Calculating Global Importance (Permutation) ...")
     for feature, indices in feature_groups.items():
         if not indices: continue
         
         saved_cols = X_numpy[:, indices].copy()
-        
         perm_idx = np.random.permutation(X_numpy.shape[0])
         X_numpy[:, indices] = X_numpy[perm_idx][:, indices]
         
@@ -91,13 +138,16 @@ def calculate_feature_importance(model: torch.nn.Module,
         perm_acc = (preds == y_true).mean()
         drop = base_acc - perm_acc
         importances[feature] = float(drop)
-        
         X_numpy[:, indices] = saved_cols
         
-    print("\n   TOP 5 DRIVERS FOR DECISIONS:")
+    print("\n   Top 5 drivers (Global):")
     sorted_imps: List[Tuple[str, float]] = sorted(importances.items(), key=lambda x: x[1], reverse=True)
     for f, v in sorted_imps[:5]:
         print(f"   {f:<20}: {v:.4f} (Accuracy Drop)")
+
+    explain_local_prediction(model, X_tensor, feature_groups, feature_names, customer_idx=0)
+    
+    explain_local_prediction(model, X_tensor, feature_groups, feature_names, customer_idx=67)
         
     return sorted_imps
 
